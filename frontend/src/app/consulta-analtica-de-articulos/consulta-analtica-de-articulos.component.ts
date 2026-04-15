@@ -68,7 +68,7 @@ export class ConsultaAnalticaDeArticulosComponent {
     this.isLoading = true;
     this.limpiarMEssages();
 
-    this.http.get<any>(`${environment.backendUrl}/api/art/`).subscribe({
+    this.http.get<any>(`${environment.backendUrl}/api/art/fetch-analitica-articulos/${this.entcod}`).subscribe({
       next: (res) => {
         this.isLoading = false;
         this.articulos = res;
@@ -91,7 +91,7 @@ export class ConsultaAnalticaDeArticulosComponent {
   goToPage(event: any): void {const inputPage = Number(event.target.value); if (inputPage >= 1 && inputPage <= this.totalPages) {this.page = inputPage - 1;}}
 
   //main table functions
-  sortField: 'eje' | 'afacod' | 'afades' | null = null;
+  sortField: 'eje'| 'artcod' | 'artdes' | 'afacod' | 'afades' | null = null;
   sortColumn: string = '';
   sortDirection: 'asc' | 'desc' = 'asc';
   toggleSort(column: string) {
@@ -109,7 +109,6 @@ export class ConsultaAnalticaDeArticulosComponent {
   private applySort(): void {
     if (!this.sortColumn) return;
     
-    // Helper to pad numbers for proper sorting
     const parseValue = (val: string) => {
       return val.replace(/(\d+)/g, (match) => {
         return match.padStart(20, '0');
@@ -117,8 +116,16 @@ export class ConsultaAnalticaDeArticulosComponent {
     };
 
     this.articulos.sort((a, b) => {
-      const aValue = parseValue((a[this.sortColumn] ?? '').toString().toUpperCase());
-      const bValue = parseValue((b[this.sortColumn] ?? '').toString().toUpperCase());
+      let aValue: string;
+      let bValue: string;
+      
+      if (this.sortColumn === 'afades') {
+        aValue = parseValue((a.afa?.afades ?? '').toString().toUpperCase());
+        bValue = parseValue((b.afa?.afades ?? '').toString().toUpperCase());
+      } else {
+        aValue = parseValue((a[this.sortColumn] ?? '').toString().toUpperCase());
+        bValue = parseValue((b[this.sortColumn] ?? '').toString().toUpperCase());
+      }
       
       const comparison = aValue.localeCompare(bValue);
       return this.sortDirection === 'asc' ? comparison : -comparison;
@@ -152,6 +159,93 @@ export class ConsultaAnalticaDeArticulosComponent {
     document.removeEventListener('mouseup', this.stopResize);
     this.resizingColIndex = null;
   };
+
+  DownloadPDF() {
+    this.limpiarMEssages();
+
+    const source = this.paginatedArticulos;
+    if (!source?.length) {
+      this.articuloError = 'No hay datos para exportar.';
+      return;
+    }
+
+    const rows = source.map((row: any) => ({
+      eje: this.currentMonth + "/" + this.eje,
+      artcod: row.artcod ?? '',
+      artdes: row.artdes ?? '',
+      afacod: row.afacod ?? '',
+      afades: row.afa.afades ?? ''
+    }));
+
+    const columns = [
+      { header: 'Ejer/Periodo', dataKey: 'eje' },
+      { header: 'Articulo', dataKey: 'artcod' },
+      { header: 'Desc. articulo', dataKey: 'artdes' },
+      { header: 'Familia', dataKey: 'afacod' },
+      { header: 'Desc. familia', dataKey: 'afades' }
+    ];
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.text('Consulta analîtica de familias', 40, 40);
+
+    autoTable(doc, {
+      startY: 60,
+      head: [columns.map(col => col.header)],
+      body: rows.map(row => columns.map(col => row[col.dataKey as keyof typeof row] ?? '')),
+      styles: { font: 'helvetica', fontSize: 10, cellPadding: 6 },
+      headStyles: { fillColor: [240, 240, 240], textColor: 33, fontStyle: 'bold' },
+      columnStyles: {
+        eje: { cellWidth: 15 },
+        artcod: { cellWidth: 15 },
+        artdes: { cellWidth: 40 },
+        afacod: { cellWidth: 15 },
+        afades: { cellWidth: 40 }
+      }
+    });
+
+    doc.save('Consulta_analîtica_de_articulos.pdf');
+  }
+
+  DownloadExcel() {
+    this.limpiarMEssages();
+    const rows = this.paginatedArticulos;
+    if (!rows || rows.length === 0) {
+      this.articuloError = 'No hay datos para exportar.';
+      return;
+    }
+  
+    const exportRows = rows.map(row => ({
+      eje: this.currentMonth + "/" + this.eje,
+      artcod: row.artcod ?? '',
+      artdes: row.artdes ?? '',
+      afacod: row.afacod ?? '',
+      afades: row.afa.afades ?? ''
+    }));
+    
+    const worksheet = XLSX.utils.aoa_to_sheet([]);
+    XLSX.utils.sheet_add_aoa(worksheet, [['Consulta analîtica de articulos']], { origin: 'A1' });
+    worksheet['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
+    XLSX.utils.sheet_add_aoa(worksheet, [['Ejer/Periodo', 'Articulo', 'Desc. articulo', 'Familias', 'Desc. familia']], { origin: 'A2' });
+    XLSX.utils.sheet_add_json(worksheet, exportRows, { origin: 'A3', skipHeader: true });
+
+    worksheet['!cols'] = [
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 40 },
+      { wch: 15 },
+      { wch: 40 }
+    ];
+  
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Articulos');
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    saveAs(
+      new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+      'Consulta_analîtica_de_articulos.xlsx'
+    );
+  }
 
   //misc
   limpiarMEssages() {

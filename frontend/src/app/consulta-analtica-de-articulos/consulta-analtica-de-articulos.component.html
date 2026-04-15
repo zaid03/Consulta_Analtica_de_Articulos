@@ -43,8 +43,8 @@
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="menu-panel" *ngIf="showMenu">
-                    <button class="purple-btn" >Exportar a PDF</button>
-                    <button class="purple-btn" >Exportar a EXCEL</button>
+                    <button class="purple-btn" (click)="DownloadPDF()">Exportar a PDF</button>
+                    <button class="purple-btn" (click)="DownloadExcel()">Exportar a EXCEL</button>
                 </div>
             </div>
         </div>
@@ -63,33 +63,35 @@
                             <span class="sort-indicator" *ngIf="sortColumn === 'eje'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                             <div class="resizer" (mousedown)="startResize($event, 0)"></div>
                         </th>
-                        <th class="sortable resizable" (click)="toggleSort('afacod')">
+                        <th class="sortable resizable" (click)="toggleSort('artcod')">
                             Artículo
-                            <span class="sort-indicator" *ngIf="sortColumn === 'afacod'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            <span class="sort-indicator" *ngIf="sortColumn === 'artcod'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                             <div class="resizer" (mousedown)="startResize($event, 1)"></div>
                         </th>
-                        <th class="sortable resizable" (click)="toggleSort('afades')">
+                        <th class="sortable resizable" (click)="toggleSort('artdes')">
                             Desc. Artículo
-                            <span class="sort-indicator" *ngIf="sortColumn === 'afades'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            <span class="sort-indicator" *ngIf="sortColumn === 'artdes'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                             <div class="resizer" (mousedown)="startResize($event, 2)"></div>
                         </th>
-                        <th class="sortable resizable" (click)="toggleSort('afades')">
+                        <th class="sortable resizable" (click)="toggleSort('afacod')">
                             Familia
-                            <span class="sort-indicator" *ngIf="sortColumn === 'afades'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                            <div class="resizer" (mousedown)="startResize($event, 2)"></div>
+                            <span class="sort-indicator" *ngIf="sortColumn === 'afacod'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            <div class="resizer" (mousedown)="startResize($event, 3)"></div>
                         </th>
                         <th class="sortable resizable" (click)="toggleSort('afades')">
                             Desc. Familia
                             <span class="sort-indicator" *ngIf="sortColumn === 'afades'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                            <div class="resizer" (mousedown)="startResize($event, 2)"></div>
+                            <div class="resizer" (mousedown)="startResize($event, 4)"></div>
                         </th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr *ngFor="let p of paginatedArticulos">
                         <td>{{currentMonth +"/" + eje}}</td>
+                        <td>{{p.artcod}}</td>
+                        <td>{{p.artdes}}</td>
                         <td>{{p.afacod}}</td>
-                        <td>{{p.afades}}</td>
+                        <td>{{p.afa.afades}}</td>
                     </tr>
                 </tbody>
             </table>
