@@ -36,15 +36,13 @@ public class Art {
 
     private String AUNCOD;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumns({
         @JoinColumn(name = "ENT", referencedColumnName = "ENT", insertable = false, updatable = false),
-        @JoinColumn(name = "AFACOD", referencedColumnName = "AFACOD", insertable = false, updatable = false),
-        @JoinColumn(name = "ASUCOD", referencedColumnName = "ASUCOD", insertable = false, updatable = false)
+        @JoinColumn(name = "AFACOD", referencedColumnName = "AFACOD", insertable = false, updatable = false)
     })
-    private Asu asu;
-
-    public Asu getAsu() { return asu; }
+    private Afa afa;
+    public Afa getAfa() { return afa; }
 
     public Integer getENT() {return ENT;}
     public void setENT(Integer ENT) {this.ENT = ENT;}
